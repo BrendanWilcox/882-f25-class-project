@@ -6,7 +6,7 @@ if __name__ == "__main__":
         entrypoint="prefect/flows/hello-world.py:simple_flow",
     ).deploy(
         name="882-fall25",
-        work_pool_name="brock-worker1",
+        work_pool_name="brock-pool1",
         job_variables={"env": {"BROCK": "loves-to-code"},
                        "pip_packages": ["pandas", "requests"]},
         tags=["prod"],
