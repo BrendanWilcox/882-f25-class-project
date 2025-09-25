@@ -2,7 +2,7 @@ from prefect import flow
 
 if __name__ == "__main__":
     flow.from_source(
-        source="https://github.com/user-name/882-f25-class-project.git",
+        source="https://github.com/BrendanWilcox/882-f25-class-project.git",
         entrypoint="prefect/flows/hello-world.py:simple_flow",
     ).deploy(
         name="882-fall25",
