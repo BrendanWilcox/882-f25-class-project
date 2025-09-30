@@ -6,8 +6,8 @@ import pandas as pd
 import json
 
 # settings
-project_id = 'btibert-ba882-fall25'
-secret_id = 'MotherDuck'   #<---------- this is the name of the secret you created
+project_id = 'bjwilcox-ba882-fall25'
+secret_id = '882-MotherDuck'   #<---------- this is the name of the secret you created
 version_id = 'latest'
 
 # db setup
@@ -19,11 +19,11 @@ db_schema = f"{db}.{schema}"
 def task(request):
 
     # Parse the request data
-    request_json = request.get_json(silent=True)
-    print(f"request: {json.dumps(request_json)}")
-    # we should be passing in a payload, but for rapid testing, ensure there is a dictionary
-    if request_json is None:
-        request_json = {'num_entries':1} # force eval on hardcoded test data
+    # request_json = request.get_json(silent=True)
+    # print(f"request: {json.dumps(request_json)}")
+    # # we should be passing in a payload, but for rapid testing, ensure there is a dictionary
+    # if request_json is None:
+    #     request_json = {'num_entries':1} # force eval on hardcoded test data
 
     # instantiate the services 
     sm = secretmanager.SecretManagerServiceClient()
@@ -41,15 +41,17 @@ def task(request):
     ##################################################### core logic: read json from gcs, parse, and insert/store
 
     # if there aren't any records to process, exit
-    num_entries = request_json.get('num_entries', 0)
-    if num_entries < 1:
-        print("no entries found for the date evaluated downsream")
+    num_entries = request.args.get("num_entries")
+    print(f"num_entries = {num_entries}")
+    if int(num_entries) == 0:
+        print("no entries found for the date evaluated downstream - EXITING")
         return {}, 200
+
     
     # read in the file from gcs that was created as part of this "run"
-    bucket_name = request_json.get("bucket_name", "btibert-ba882-fall25-nfl")
+    bucket_name = request.args.get("bucket_name", "bjwilcox-ba882-fall25-nfl")
     bucket = storage_client.bucket(bucket_name)
-    blob_name = request_json.get("blob_name", "raw/scoreboard/season=2025/week=2/9b8ef48f3092/data.json")
+    blob_name = request.args.get("blob_name", "raw/scoreboard/season=2025/week=2/9b8ef48f3092/data.json")
     blob = bucket.blob(blob_name)
     data_str = blob.download_as_text()
     j = json.loads(data_str)
@@ -75,7 +77,7 @@ def task(request):
         teams = e['competitions'][0]['competitors']
         attendance = e['competitions'][0]['attendance']
         source_path = bucket_name + blob_name
-        run_id = request_json.get('run_id', '9b8ef48f3092')
+        run_id = request.args.get('run_id')
         
         # append the info for games and venues
         games.append(
@@ -168,7 +170,7 @@ def task(request):
     print(f"length of game_teams: {len(gt_df)} =======")
 
     # write to games gcs - both at the core and within the partition of the run id
-    gcs_path = "gs://btibert-ba882-fall25-nfl/raw"
+    gcs_path = "gs://bjwilcox-ba882-fall25-nfl/raw"
     full_path = gcs_path + f"/games/season={season}/week={week}/data.parquet"
     games_df.to_parquet(full_path, index=False)
     full_path_run = gcs_path + f"/games/season={season}/week={week}/run_id={run_id}/data.parquet"
@@ -209,4 +211,5 @@ def task(request):
     tbl = db_schema + ".game_team"
     md.execute(f"INSERT INTO {tbl} SELECT * FROM gt_df")
     
+
     return {}, 200

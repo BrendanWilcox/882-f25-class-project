@@ -6,10 +6,10 @@ import datetime
 import uuid
 
 # settings
-project_id = 'btibert-ba882-fall25'
-secret_id = 'MotherDuck'   #<---------- this is the name of the secret you created
+project_id = 'bjwilcox-ba882-fall25'
+secret_id = '882-MotherDuck'   #<---------- this is the name of the secret you created
 version_id = 'latest'
-bucket_name = 'btibert-ba882-fall25-nfl'  #<------ we created this bucket at the end of the Cloud Storage section
+bucket_name = ' bjwilcox-ba882-fall25-nfl'  #<------ we created this bucket at the end of the Cloud Storage section
 
 ####################################################### helpers
 
@@ -50,6 +50,16 @@ def task(request):
     print(f"requested url - status {resp.status_code}")
     j = resp.json()
 
+    # handle days where there are no games, just bail out
+    if len(j.get('events')) == 0:
+        print("no entries to process ============================")
+        return {
+            "num_entries": 0, 
+            "run_id": run_id, 
+        }, 200
+
+
+    # otherwise, process the data and save the artifact to GCS
     # write the data to GCS
     j_string = json.dumps(j)
     season = j['leagues'][0]['season']['year']

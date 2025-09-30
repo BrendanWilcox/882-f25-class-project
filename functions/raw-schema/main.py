@@ -5,8 +5,8 @@ from google.cloud import secretmanager
 import duckdb
 
 # settings
-project_id = 'btibert-ba882-fall25'
-secret_id = 'MotherDuck'   #<---------- this is the name of the secret you created
+project_id = 'bjwilcox-ba882-fall25'
+secret_id = '882-MotherDuck'   #<---------- this is the name of the secret you created
 version_id = 'latest'
 
 # db setup
